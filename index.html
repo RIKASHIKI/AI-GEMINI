@@ -3,116 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Image App</title>
+    <title>Gemini Vision Chat</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for better UI -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            /* Dark Mode background */
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        /* Styling for the chat area to manage scroll and layout */
+        #chatContainer {
+            min-height: calc(100vh - 12rem); /* Full height minus header and input area */
+            max-height: calc(100vh - 12rem);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 2rem;
+            
+        }
+
+        /* Custom scrollbar for better look in dark mode */
+        #chatContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chatContainer::-webkit-scrollbar-track {
+            background: #242424;
+        }
+
+        #chatContainer::-webkit-scrollbar-thumb {
+            background: #444444;
+            border-radius: 4px;
+        }
+
+        #chatContainer::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .user-message {
+            background-color: #0d47a1; /* A deeper blue for user bubbles */
+            color: white;
+            border-radius: 18px 18px 0px 18px; /* Rounded corners with flat bottom-right */
+        }
+
+        .gemini-message {
+            background-color: #242424; /* Darker grey for Gemini bubbles */
+            color: #e0e0e0;
+            border-radius: 18px 18px 18px 0px; /* Rounded corners with flat bottom-left */
+        }
+
+        .gemini-icon {
+            filter: invert(1) brightness(0.8); /* Adjust icon color for dark mode */
+        }
+
+        /* Tailwind component classes for button disabled state */
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-start h-screen">
 
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl">
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">
-            AI
-        </h1>
+    <!-- Header (Optional) -->
+    <header class="w-full max-w-3xl py-4 px-4 border-b border-gray-800 flex justify-center items-center fixed top-0 bg-[#121212] z-10">
+        <h1 class="text-xl font-semibold text-gray-200">Gemini Vision Chat</h1>
+    </header>
 
-        <!-- Input Section -->
-        <div class="space-y-4">
-            <!-- File input for image -->
-            <label for="fileInput" class="block text-sm font-medium text-gray-700">Pilih Gambar</label>
-            <div class="flex items-center justify-center w-full">
-                <label for="fileInput" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.207m9.593 1.583A5.5 5.5 0 0 0 14 6.5V13h-4M13 13h-4m-2 2h4V8H7v7Zm-2 0V8H2v7ZM13 13V8m-2-5v5"/>
-                        </svg>
-                        <p class="mb-2 text-sm text-gray-500 text-center"><span class="font-semibold">Klik untuk mengunggah</span> atau seret dan jatuhkan</p>
-                        <p class="text-xs text-gray-500 text-center">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
-                    </div>
-                    <input id="fileInput" type="file" class="hidden" accept="image/*" />
-                </label>
+    <!-- Main Chat Container -->
+    <div id="chatContainer" class="w-full max-w-3xl px-4 pt-16 mt-0">
+        <!-- Messages will be injected here -->
+        <div class="flex items-start mb-6">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 p-1 mr-3 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="gemini-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
-            <div id="imagePreview" class="mt-4 hidden max-w-full overflow-hidden rounded-lg border border-gray-300 shadow-sm">
-                <img id="previewImage" src="#" alt="Pratinjau Gambar" class="w-full h-auto object-cover" />
-            </div>
-
-            <!-- Text input -->
-            <div>
-                <label for="textPrompt" class="block text-sm font-medium text-gray-700">Masukkan pertanyaan Anda</label>
-                <textarea id="textPrompt" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 transition-colors"></textarea>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="mt-6">
-            <button id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                Kirim
-            </button>
-        </div>
-
-        <!-- Message and Loading Indicator -->
-        <div id="messageBox" class="mt-4 hidden p-4 rounded-lg text-center font-medium" role="alert"></div>
-
-        <!-- Response Section -->
-        <div id="responseContainer" class="mt-6 hidden">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800">Respons Gemini</h2>
-            <div id="responseDisplay" class="bg-gray-100 p-4 rounded-lg shadow-inner overflow-auto whitespace-pre-wrap leading-relaxed text-gray-700">
-                <p>Respons akan muncul di sini...</p>
+            <div class="gemini-message p-3 max-w-xs sm:max-w-md shadow-md">
+                Halo! Saya adalah Gemini. Kirimkan saya gambar atau tanyakan sesuatu.
             </div>
         </div>
     </div>
 
+    <!-- Input Area (Fixed at the Bottom) -->
+    <footer class="w-full max-w-3xl p-4 fixed bottom-0 bg-[#121212] border-t border-gray-800">
+        <div id="previewArea" class="hidden flex items-center justify-between p-2 mb-2 border border-gray-700 rounded-lg bg-[#1e1e1e]">
+            <div class="flex items-center">
+                <img id="imagePreview" src="#" alt="Pratinjau Gambar" class="w-12 h-12 object-cover rounded mr-3 border border-gray-600"/>
+                <span id="fileName" class="text-sm text-gray-400 truncate max-w-[200px]"></span>
+            </div>
+            <button id="removeImageBtn" class="text-gray-500 hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="flex items-center bg-[#242424] rounded-xl border border-gray-700 shadow-lg">
+            <!-- Image Upload Button -->
+            <label for="fileInput" class="p-3 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M12 4v16"/><path d="M17.66 8.34L12 14l-5.66-5.66"/></svg>
+                <input id="fileInput" type="file" class="hidden" accept="image/*" />
+            </label>
+
+            <!-- Text Input -->
+            <textarea id="textPrompt" rows="1" placeholder="Kirim pesan..." class="flex-grow bg-transparent p-3 text-gray-200 focus:outline-none resize-none overflow-hidden" style="max-height: 100px;"></textarea>
+
+            <!-- Send Button -->
+            <button id="submitBtn" class="btn-primary p-3 rounded-xl transition-colors text-white bg-blue-600 hover:bg-blue-700 m-1" disabled>
+                <svg id="sendIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2L15 22 11 13 2 9Z"/></svg>
+                <svg id="loadingSpinner" class="animate-spin -ml-1 h-6 w-6 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.963l3-2.672z"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="messageBox" class="text-sm text-center mt-2 hidden text-red-400"></div>
+    </footer>
+
+
     <script>
+        // --- FIREBASE AND API SETUP ---
         // API key. Do not modify.
         const apiKey = "";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-        // Get DOM elements
+        // --- DOM ELEMENTS ---
+        const chatContainer = document.getElementById('chatContainer');
         const fileInput = document.getElementById('fileInput');
         const textPrompt = document.getElementById('textPrompt');
         const submitBtn = document.getElementById('submitBtn');
+        const previewArea = document.getElementById('previewArea');
         const imagePreview = document.getElementById('imagePreview');
-        const previewImage = document.getElementById('previewImage');
+        const fileNameSpan = document.getElementById('fileName');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        const sendIcon = document.getElementById('sendIcon');
+        const loadingSpinner = document.getElementById('loadingSpinner');
         const messageBox = document.getElementById('messageBox');
-        const responseContainer = document.getElementById('responseContainer');
-        const responseDisplay = document.getElementById('responseDisplay');
 
-        // Show image preview when file is selected
+        let selectedFile = null;
+
+        // --- UTILITY FUNCTIONS ---
+
+        // Auto-resize textarea height
+        function autoResizeTextarea() {
+            textPrompt.style.height = 'auto';
+            textPrompt.style.height = textPrompt.scrollHeight + 'px';
+        }
+        textPrompt.addEventListener('input', autoResizeTextarea);
+
+        // Check if input is empty to enable/disable button
+        function checkInput() {
+            submitBtn.disabled = textPrompt.value.trim() === '' && selectedFile === null;
+        }
+        textPrompt.addEventListener('input', checkInput);
+
+        // Handle file selection and preview
         fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                if (!selectedFile.type.startsWith('image/')) {
+                    showMessage("Hanya file gambar yang didukung.", 'text-red-400');
+                    selectedFile = null;
+                    fileInput.value = '';
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    previewImage.src = e.target.result;
-                    imagePreview.classList.remove('hidden');
+                    imagePreview.src = e.target.result;
+                    fileNameSpan.textContent = selectedFile.name;
+                    previewArea.classList.remove('hidden');
+                    checkInput();
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(selectedFile);
             } else {
-                imagePreview.classList.add('hidden');
+                previewArea.classList.add('hidden');
+                checkInput();
             }
         });
 
-        // Handle button click
-        submitBtn.addEventListener('click', async () => {
-            const file = fileInput.files[0];
-            const text = textPrompt.value.trim();
+        // Remove selected image
+        removeImageBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            previewArea.classList.add('hidden');
+            checkInput();
+        });
 
-            if (!file && !text) {
-                showMessage("Pilih gambar atau masukkan teks.", 'bg-red-100 text-red-700');
-                return;
+        // Helper function to convert file to Base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Helper function to create the API payload
+        function createPayload(text, base64Data, mimeType) {
+            const parts = [];
+            if (text) {
+                parts.push({ text: text });
+            }
+            if (base64Data) {
+                parts.push({
+                    inlineData: {
+                        mimeType: mimeType,
+                        data: base64Data
+                    }
+                });
+            }
+            return {
+                contents: [{
+                    parts: parts
+                }]
+            };
+        }
+
+        // Helper function to show a temporary message
+        function showMessage(message, classes) {
+            messageBox.textContent = message;
+            messageBox.className = `text-sm text-center mt-2 ${classes}`;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Helper function to set loading state
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitBtn.disabled = true;
+                sendIcon.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
+                textPrompt.disabled = true;
+                fileInput.disabled = true;
+            } else {
+                // Only re-enable if input is present
+                checkInput();
+                sendIcon.classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
+                textPrompt.disabled = false;
+                fileInput.disabled = false;
+            }
+        }
+
+        // Add message to chat display
+        function addMessage(text, type, imageUrl = null) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex mb-6 ${type === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const avatarHtml = `
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 p-1 ${type === 'user' ? 'hidden' : 'mr-3'} flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="gemini-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+            `;
+
+            const contentHtml = `
+                <div class="${type}-message p-3 max-w-xs sm:max-w-md shadow-lg">
+                    ${imageUrl ? `<img src="${imageUrl}" alt="Uploaded Image" class="w-full h-auto object-cover rounded-lg mb-2 border border-gray-600"/>` : ''}
+                    <div class="whitespace-pre-wrap">${text}</div>
+                </div>
+            `;
+
+            if (type === 'user') {
+                messageWrapper.innerHTML = contentHtml; // No avatar for user, just content
+            } else {
+                messageWrapper.innerHTML = avatarHtml + contentHtml;
             }
 
-            showMessage("Mengirim...", 'bg-yellow-100 text-yellow-700');
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
+        }
+
+        // --- MAIN LOGIC ---
+
+        // Handle Enter key for quick sending
+        textPrompt.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent new line
+                if (!submitBtn.disabled) {
+                    submitBtn.click();
+                }
+            }
+        });
+
+        // Handle button click (send message)
+        submitBtn.addEventListener('click', async () => {
+            const text = textPrompt.value.trim();
+            const file = selectedFile;
+
+            if (text === '' && file === null) return;
+
+            // 1. Add User Message to Chat
+            const userText = text === '' ? "(Gambar terlampir)" : text;
+            const imageUrl = file ? imagePreview.src : null;
+            addMessage(userText, 'user', imageUrl);
+
+            // 2. Prepare and Clean Input
+            const originalText = text;
+            textPrompt.value = '';
+            autoResizeTextarea(); // Reset textarea height
+            removeImageBtn.click(); // Clear selected file
+            checkInput(); // Disable button
+
+            // 3. Start Loading State
             setLoading(true);
 
             try {
                 const base64Data = file ? await getBase64(file) : null;
-                const payload = createPayload(text, base64Data);
+                const mimeType = file ? file.type : 'text/plain';
+                const payload = createPayload(originalText, base64Data, mimeType);
 
                 // Exponential backoff for API calls
                 const maxRetries = 5;
@@ -141,84 +344,26 @@
                 }
 
                 const result = await response.json();
-                const textResult = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                const textResult = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, saya tidak dapat memproses permintaan ini.";
 
-                if (textResult) {
-                    responseDisplay.textContent = textResult;
-                    responseContainer.classList.remove('hidden');
-                    showMessage("Respons diterima!", 'bg-green-100 text-green-700');
-                } else {
-                    responseDisplay.textContent = "Tidak ada respons yang valid dari Gemini. Coba lagi.";
-                    responseContainer.classList.remove('hidden');
-                    showMessage("Respons tidak valid.", 'bg-red-100 text-red-700');
-                }
+                // 4. Add Gemini Response
+                addMessage(textResult, 'gemini');
+
             } catch (error) {
                 console.error('Error:', error);
-                showMessage(`Terjadi kesalahan: ${error.message}`, 'bg-red-100 text-red-700');
-                responseDisplay.textContent = "Terjadi kesalahan saat berkomunikasi dengan API.";
-                responseContainer.classList.remove('hidden');
+                // 4. Add Error Message
+                addMessage(`Terjadi kesalahan saat berkomunikasi dengan API: ${error.message}`, 'gemini');
+                showMessage(`Terjadi kesalahan: ${error.message}`, 'text-red-400');
             } finally {
                 setLoading(false);
             }
         });
 
-        // Helper function to convert file to Base64
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
-            });
-        }
+        // Initial check on load
+        window.onload = () => {
+            checkInput();
+        };
 
-        // Helper function to create the API payload
-        function createPayload(text, base64Data) {
-            const parts = [];
-            if (text) {
-                parts.push({ text: text });
-            }
-            if (base64Data) {
-                parts.push({
-                    inlineData: {
-                        mimeType: "image/jpeg", // Assuming JPEG, but could be dynamic
-                        data: base64Data
-                    }
-                });
-            }
-            return {
-                contents: [{
-                    parts: parts
-                }]
-            };
-        }
-
-        // Helper function to show a temporary message
-        function showMessage(message, classes) {
-            messageBox.textContent = message;
-            messageBox.className = `mt-4 p-4 rounded-lg text-center font-medium ${classes}`;
-            messageBox.classList.remove('hidden');
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 5000);
-        }
-
-        // Helper function to set loading state
-        function setLoading(isLoading) {
-            if (isLoading) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.963l3-2.672z"></path>
-                    </svg>
-                    Memproses...
-                `;
-            } else {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = "Kirim";
-            }
-        }
     </script>
 </body>
 </html>
